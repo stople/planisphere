@@ -20,7 +20,7 @@
 A thin wrapper to produce vector graphics using cairo.
 """
 
-from math import pi, sin, cos
+from math import pi, sin, cos, sqrt
 
 import cairocffi as cairo
 
@@ -173,6 +173,9 @@ class GraphicsContext:
 
     def begin_path(self):
         self.context.new_path()
+
+    def get_context(self):
+        self.context
 
     def begin_sub_path(self):
         self.context.new_sub_path()
@@ -467,6 +470,54 @@ class GraphicsContext:
             y_anchor += line_heights[line_number]
 
         self.context.restore()
+
+    def eccentric_ellipse_v0(self, centre_x, centre_y, semi_major_axis, eccentricity, radians):
+        self.context.save()
+        self.context.translate(tx=centre_x, ty=centre_y)
+        self.context.rotate(radians=radians)
+        self.context.scale(1, sqrt(1 - eccentricity * eccentricity))
+        self.context.translate(tx=-eccentricity*semi_major_axis, ty=0)
+        self.circle(0, 0, semi_major_axis)
+        self.context.restore()
+
+    def eccentric_ellipse(self, centre_x, centre_y, semi_major_axis, eccentricity, radians):
+        self.context.save()
+        print("ellipse start")
+        print(self.context.get_matrix())
+        #print(self.context.debug_matrix())
+        print("tr", centre_x, centre_y)
+        self.context.translate(tx=centre_x, ty=centre_y)
+        print(self.context.get_matrix())
+        #self.context.rotate(radians=radians)
+        print("scale", sqrt(1 - eccentricity * eccentricity))
+        self.context.scale(1, sqrt(1 - eccentricity * eccentricity))
+        print(self.context.get_matrix())
+        print("rot", radians)
+        self.context.rotate(radians=radians)
+        print(self.context.get_matrix())
+        print("tr", -eccentricity*semi_major_axis)
+        self.context.translate(tx=-eccentricity*semi_major_axis, ty=0)
+        print(self.context.get_matrix())
+        self.circle(0, 0, semi_major_axis)
+        self.context.restore()
+
+
+    def eccentric_ellipse_with_matrix(self, centre_x, centre_y, semi_major_axis, eccentricity, matrix):
+        self.context.save()
+        self.context.translate(tx=centre_x, ty=centre_y)
+        #self.context.rotate(radians=radians)
+        self.context.scale(1, sqrt(1 - eccentricity * eccentricity))
+        self.context.transform(matrix)
+        self.context.translate(tx=-eccentricity * semi_major_axis, ty=0)
+        self.circle(0, 0, semi_major_axis)
+        self.context.restore()
+
+    def ellipse_with_matrix(self, matrix):
+        self.context.save()
+        self.context.transform(matrix)
+        self.circle(0, 0, 1)
+        self.context.restore()
+
 
 
 class BaseComponent:
